@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
 import { ToastContainer } from 'react-toastify';
+import { SessionProvider } from 'next-auth/react';
+import { useThemeContext } from '@/context/ThemeCtx';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -24,7 +26,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
 
       <ProgressBar
         height="4px"
-        color="#587997"
+        color="#0ff"
         options={{ showSpinner: false }}
         shallowRouting
       />

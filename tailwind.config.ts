@@ -32,7 +32,9 @@ module.exports = {
         success: "#008031",
         "success-hover": "#8acba3",
         error: "#FF0000",
-        active: "#EAEEF2"
+        active: "#EAEEF2",
+        destructive:'#f81d28',
+        "color-dark": '#1c9abc'
       },
       // screens: {
 			// 	sm: '576px',

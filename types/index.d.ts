@@ -121,6 +121,8 @@ export interface SessionContextProps {
   accountId: string | null;
   roleId: string | null;
   email: string | null;
+  //  WorkspaceId: string | null;
+  setWorkspaceId: any;
   login: (
     token: string,
     accountId: string,
@@ -134,3 +136,31 @@ export interface ThemeContextProps {
   theme: string | null;
   setTheme: React.Dispatch<React.SetStateAction<string | null>>;
 }
+
+export interface WorkspaceCardProps {
+  id?: number;
+  logo: string;
+  name: string;
+  description: string;
+  projectCount: number;
+}
+
+export interface UserDetails {
+  name?: string;
+  email?: string;
+  accountId?: string;
+  role?: string;
+  image: string | StaticImport;
+}
+
+export type WorkspaceType = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  description?: string;
+  createdby?: string;
+  guestModerator?: any;
+  clients?: any;
+  projects?: any;
+  transactions?: any;
+};

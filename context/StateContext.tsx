@@ -1,21 +1,21 @@
 'use client';
 
+import { getCookie } from 'cookies-next';
 import { usePathname } from 'next/navigation';
 import React, {
+  SetStateAction,
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState
 } from 'react';
 import SwipeIndicator from '../components/sidebars/SwipeIndicator';
+import { UserDetails } from '@/types';
+import { getNameFromEmail } from '@/utils/util';
+import { useSession } from 'next-auth/react';
 
-// Add Your Props here
-type User = {
-  name: string;
-  email: string;
-  image: string;
-};
 interface StateContextProps {
   currentPath: string;
   openPaymentModal: boolean;
@@ -70,14 +70,17 @@ interface StateContextProps {
   pageLoaded: boolean;
   setPageLoaded: React.Dispatch<React.SetStateAction<boolean>>;
   anyModalOpen: boolean;
-  user: User;
+  user: UserDetails;
+  setUser: React.Dispatch<SetStateAction<UserDetails>>;
+  isView: boolean;
+  setIsView: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const StateContext = createContext({} as StateContextProps);
 
 const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
   // Mock-Data for user profile
-  const user = useMemo(() => {
+  const mocuser = useMemo(() => {
     return {
       name: 'Jane Doe',
       email: 'JohnDoe@gmail.com',
@@ -86,6 +89,14 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Add Your State(s) Here
+  const [user, setUser] = useState<UserDetails>({
+    name: '',
+    email: '',
+    accountId: '',
+    role: '',
+    image: '/facemoji.png'
+  });
+  const { data: session } = useSession();
   const [selectedProjectFilter, setSelectedProjectFilter] = useState('');
   const [projectSearchTerm, setProjectSearchTerm] = useState('');
   const [selectedClientFilter, setSelectedClientFilter] =
@@ -95,48 +106,34 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
   const [handleSwipe, setHandleSwipe] = useState<number | null>(null);
   const [pageLoaded, setPageLoaded] = useState(true);
 
-  useEffect(() => {
-    const projectFilter = localStorage.getItem('project-filter');
-    if (!projectFilter) {
-      setSelectedProjectFilter('all');
-      return;
+  useLayoutEffect(() => {
+    if (!session?.user?.email) return;
+    setUser({
+      ...session?.user,
+      name: session?.user?.name!,
+      image: session?.user?.image!,
+      email: session?.user?.email!
+    });
+
+    return;
+  }, [session]);
+  useLayoutEffect(() => {
+    const userFromCookie = getCookie('user');
+    if (userFromCookie) {
+      const parsedUser = JSON.parse(userFromCookie) as UserDetails;
+      setUser({
+        name: getNameFromEmail(parsedUser.email!),
+        email: parsedUser.email,
+        accountId: parsedUser.accountId,
+        role: parsedUser.role,
+        image: '/facemoji.png'
+      });
     }
-    if (projectFilter) {
-      setSelectedProjectFilter(projectFilter);
-      return;
-    }
+    return;
   }, []);
-
-  useEffect(() => {
-    let timeoutId: any;
-
-    const showScrollbar = () => {
-      document.documentElement.setAttribute('scrollbar', '');
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        hideScrollbar();
-      }, 2000);
-    };
-
-    const hideScrollbar = () => {
-      document.documentElement.removeAttribute('scrollbar');
-    };
-
-    window.addEventListener('scroll', showScrollbar);
-
-    return () => {
-      window.removeEventListener('scroll', showScrollbar);
-      clearTimeout(timeoutId);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (selectedProjectFilter === '') return;
-
-    localStorage.setItem('project-filter', selectedProjectFilter);
-  }, [selectedProjectFilter]);
 
   // Track Modals State
+  const [isView, setIsView] = useState(false);
   const [adminShowMobileMenu, setAdminShowMobileMenu] = useState(false);
   const [modShowMobileMenu, setModShowMobileMenu] = useState(false);
   const [landingMobileMenu, setLandingMobileMenu] = useState(false);
@@ -176,7 +173,8 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
     createClientModal ||
     deleteMilestoneModal ||
     newMessageModal ||
-    landingMobileMenu;
+    landingMobileMenu ||
+    isView;
   const anyMobileSidebarOpen = adminShowMobileMenu || modShowMobileMenu;
 
   // Sidebar Mobile
@@ -185,6 +183,48 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
       navigator?.userAgent
     );
   };
+
+  useEffect(() => {
+    const projectFilter = localStorage.getItem('project-filter');
+    if (!projectFilter) {
+      setSelectedProjectFilter('all');
+      return;
+    }
+    if (projectFilter) {
+      setSelectedProjectFilter(projectFilter);
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (pathname === '/') return;
+    let timeoutId: any;
+
+    const showScrollbar = () => {
+      document.documentElement.setAttribute('scrollbar', '');
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        hideScrollbar();
+      }, 2000);
+    };
+
+    const hideScrollbar = () => {
+      document.documentElement.removeAttribute('scrollbar');
+    };
+
+    window.addEventListener('scroll', showScrollbar);
+
+    return () => {
+      window.removeEventListener('scroll', showScrollbar);
+      clearTimeout(timeoutId);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (selectedProjectFilter === '') return;
+
+    localStorage.setItem('project-filter', selectedProjectFilter);
+  }, [selectedProjectFilter]);
 
   useEffect(() => {
     if (!isMobileDevice()) return;
@@ -249,12 +289,13 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (anyModalOpen || anyMobileSidebarOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
     }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setAdminShowMobileMenu(false);
+        setIsView(false), setAdminShowMobileMenu(false);
         setModShowMobileMenu(false);
         setOpenPaymentModal(false);
         setIsRemoveClientModal(false);
@@ -290,6 +331,7 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
       setLandingMobileMenu,
       currentPath,
       user,
+      setUser,
       openPaymentModal,
       setOpenPaymentModal,
       isRemoveClientModal,
@@ -333,9 +375,12 @@ const StateContextProvider = ({ children }: { children: React.ReactNode }) => {
       setSwipeIndicator,
       anyModalOpen,
       pageLoaded,
-      setPageLoaded
+      setPageLoaded,
+      isView,
+      setIsView
     }),
     [
+      isView,
       anyModalOpen,
       adminShowMobileMenu,
       modShowMobileMenu,

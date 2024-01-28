@@ -129,3 +129,99 @@ export const commentsTime = (time: number | Date): string => {
 export const generateId = () => {
   return Math.random().toString(36).substring(2, 9);
 };
+
+/**
+ * Sets a key-value pair in the session storage.
+ * @function SetToSessionStorage
+ * @param {string} key
+ * @param {any} value
+ */
+
+export const SetToSessionStorage = (key: string, value: any): void => {
+  if (typeof sessionStorage === 'undefined') return;
+  try {
+    const serializedValue = JSON.stringify(value);
+    sessionStorage.setItem(key, serializedValue);
+  } catch (error) {
+    //    console.error(`Error setting item to session storage: ${error}`);
+  }
+};
+
+/**
+ * Retrieves a value from the session storage based on the provided key.
+ * @function GetFromSessionStorage
+ * @param {string} key
+ * @returns {string | null
+ */
+
+export const GetFromSessionStorage = (key: string): string | null => {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const storedValue = sessionStorage?.getItem(key);
+    return storedValue !== null ? storedValue : null;
+  } catch (error) {
+    //    console.error(`Error getting item from session storage: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * Returns the name from an email address.
+ * @function getNameFromEmail
+ * @param {string} email
+ * @returns {string}
+ */
+
+export const getNameFromEmail = (email: string): string => {
+  return email.split('@')[0];
+};
+
+/**
+ * Shrink a string to a specified length(len).
+ * @function shrinkString
+ * @param {string} str
+ * @param {number} len
+ * @returns {string}
+ */
+export const shrinkString = ({
+  str,
+  len
+}: {
+  str: string;
+  len: number;
+}): string => {
+  if (!str) return '';
+  if (str.length > len) {
+    return str.substring(0, len) + '...';
+  }
+  return str;
+};
+
+interface DateToMilliseconds {
+  (date: string): number;
+}
+
+/**
+ * Converts a date to seconds
+ * @function dateToSeconds
+ * @param {string} date
+ * @returns {number}
+ */
+export const dateToSeconds: DateToMilliseconds = (date: string): number => {
+  const convertedDate = new Date(date);
+  return Math.floor(convertedDate.getTime() / 1000);
+};
+
+/**
+ * Gets the initials from a given name
+ * @function getInitials
+ * @param {string} name
+ * @returns {string}
+ */
+export const getInitials = (name: string): string => {
+  const words = name.split(' ');
+  return words
+    .map(word => word[0])
+    .join('')
+    .toUpperCase();
+};

@@ -1,15 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
-import { loginUser } from '@/api/authApi';
-import { useSession } from '@/context/sessionProvider';
-
-import React, { useState } from 'react';
+import { useEffect, useLayoutEffect, useState, useTransition } from 'react';
 
 import { MdOutlineMail } from 'react-icons/md';
 import { Eye, EyeSlash } from 'iconsax-react';
 import Button from '@/components/ui/Button';
 import Image from 'next/image';
-import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { LoginSchema } from '@/schemas';
@@ -24,9 +21,29 @@ import {
   FormMessage
 } from '../ui/form';
 import { FormInput } from '../ui/FormInput';
-import { cn } from '@/utils/util';
+import { cn, getNameFromEmail } from '@/utils/util';
+import FormError from './FormError';
+import FormSuccess from './FormSuccess';
+import { login } from '@/actions/login';
+import { useStateCtx } from '@/context/StateContext';
+import SocialLogin from '../auth/SocialLogin';
+import { UserDetails } from '@/types';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next-nprogress-bar';
+import { DEFAULT_LOGIN_REDIRECT } from '@/routes';
+import { signIn } from '@/auth';
 
 const SigninForm = () => {
+  const { setUser } = useStateCtx();
+  const router = useRouter();
+
+  const [success, setSuccess] = useState<string | undefined>('');
+  const [error, setError] = useState<string | undefined>('');
+
+  const [isLoading, startTransition] = useTransition();
+  const [defaultInpTypeNew, setDefaultInpTypeNew] = useState<
+    'password' | 'text'
+  >('password');
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -34,36 +51,36 @@ const SigninForm = () => {
       password: ''
     }
   });
-  const { login } = useSession();
-  const [isLoading, setIsLoading] = useState(false);
-  const [defaultInpTypeNew, setDefaultInpTypeNew] = useState<
-    'password' | 'text'
-  >('password');
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+    setError('');
+    setSuccess('');
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    setIsLoading(true);
-    e.preventDefault();
-
-    try {
-      const response = await loginUser(formData);
-      setFormData({
-        email: '',
-        password: ''
+    startTransition(() => {
+      login(values).then(data => {
+        setSuccess(data?.success);
+        setError(data?.error);
+        if (data?.success) {
+          setTimeout(() => {
+            setSuccess('Redirecting....');
+          }, 1000);
+          setTimeout(() => {
+            router.push(DEFAULT_LOGIN_REDIRECT);
+          }, 2000);
+        }
+        setUser({
+          ...data.user,
+          name: getNameFromEmail(data?.user?.email!),
+          image: '/facemoji.png',
+          email: data?.user?.email ?? 'Johndoe@fake.com'
+        });
+        // console.log(data.user);
       });
-    } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
-    <div className="relative py-4 md:py-6 rounded-[16px] bg-white shadow-lg px-3 md:shadow-none z-20 w-full max-w-[600px] mx-auto">
+    <div className="relative py-4 md:py-6 rounded-[16px] bg-white shadow-lg px-4 sm:px-6 md:shadow-none z-20 w-full max-w-[600px] mx-auto">
       <h1 className="text-center font-[600]  text-[28px]"> Welcome back !</h1>
       <span className="block text-center font-[400] text-[14px] mt-2 ">
         Great to have you back with us again
@@ -71,18 +88,19 @@ const SigninForm = () => {
       <Form {...form}>
         <form
           action=""
-          className="flex flex-col mt-4 z-10 gap-y-2 md:gap-y-6"
-          onSubmit={form.handleSubmit(() => handleFormSubmit)}
+          className="flex flex-col mt-4 z-10 gap-y-2 md:gap-y-6 "
+          onSubmit={form.handleSubmit(onSubmit)}
         >
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold">Business Email</FormLabel>
+                <FormLabel className="font-semibold ">Business Email</FormLabel>
                 <FormControl>
                   <div className="flex items-center w-full relative">
                     <FormInput
+                      disabled={isLoading}
                       type="email"
                       {...field}
                       placeholder="Enter Business Email Address"
@@ -102,10 +120,11 @@ const SigninForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="font-semibold">Password</FormLabel>
+                <FormLabel className="font-semibold ">Password</FormLabel>
                 <FormControl>
                   <div className="flex w-full relative items-center">
                     <FormInput
+                      disabled={isLoading}
                       {...field}
                       type={defaultInpTypeNew}
                       name="password"
@@ -140,15 +159,17 @@ const SigninForm = () => {
               </FormItem>
             )}
           />
-          <button type="submit">Login</button>
-          {/* <div className="flex relative items-center [perspective:300px] transform-gpu max-sm:w-full">
+          <FormError message={error} />
+          <FormSuccess message={success} />
+
+          <div className="flex relative items-center [perspective:300px] transform-gpu max-sm:w-full">
             <Button
+              disabled={isLoading}
               className={cn(
                 'w-full rounded-md my-3',
                 isLoading ? '[&>div>span]:opacity-0' : ''
               )}
               type="submit"
-              disabled={!form.formState.isValid}
               spinnerColor="#fff"
             >
               Log in
@@ -160,7 +181,7 @@ const SigninForm = () => {
                 <span />
               </div>
             )}
-          </div> */}
+          </div>
         </form>
       </Form>
 
@@ -170,23 +191,8 @@ const SigninForm = () => {
         <span className="seperate h-[1px] bg-[#C7C7C7] w-full" />
       </div>
 
-      <Link href="">
-        <Button
-          className=" text-black w-full my-3 border-[#C7C7C7] 
-								border rounded-md bg-[#fff] py-1"
-          leftIcon={
-            <Image
-              src="/Mobile/google.svg"
-              alt="google_logo_icon"
-              width={20}
-              height={20}
-              className="mb-1"
-            />
-          }
-        >
-          Continue with Google
-        </Button>
-      </Link>
+      <SocialLogin />
+
       <span className="  text-header  mt-5 md:mt-8 text-sm  relative block text-center md:text-black z-10">
         Don&apos;t have an account?
         <Link href="/sign-up" className="ml-1 underline font-medium">

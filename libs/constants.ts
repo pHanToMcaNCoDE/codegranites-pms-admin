@@ -17,7 +17,8 @@ import {
   SettingsProps,
   NavbarLinkProps,
   FooterLinkProps,
-  FeatProps
+  FeatProps,
+  WorkspaceCardProps
 } from '../types';
 import Guest from '../public/home/guest.svg';
 import Pro from '../public/home/pro.svg';
@@ -78,12 +79,6 @@ export const SIDEBAR_ADMIN_LINKS: SidebarAdminProps[] = [
     icon: Notification,
 
     link: 'admin-notifications'
-  },
-  {
-    id: 10,
-    label: 'Invite',
-    icon: AddCircle,
-    link: 'admin-invite'
   }
 ];
 
@@ -174,7 +169,7 @@ export const Settingsnav: SettingsProps[] = [
 
 export const NAV_LINKS: NavbarLinkProps[] = [
   { id: 1, link: '', label: 'home' },
-  { id: 2, link: 'dashboard', label: 'client' },
+
   { id: 3, link: 'style-guide', label: 'style-guide' },
   { id: 4, link: 'admin-dashboard', label: ' Admin' }
 ];
@@ -240,5 +235,72 @@ export const Feat: FeatProps[] = [
     description:
       'Tailor your CodeGranites experience with the Settings feature, offering both admins and clients the ability to customize their accounts and preferences',
     icon: Sett
+  }
+];
+
+export const Workspaces: WorkspaceCardProps[] = [
+  {
+    id: 1,
+    logo: '1',
+    name: 'Workspace 1',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 8
+  },
+  {
+    id: 2,
+    logo: '2',
+    name: 'Workspace 2',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 4
+  },
+  {
+    id: 3,
+    logo: '3',
+    name: 'Workspace 3',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 10
+  },
+  {
+    id: 4,
+    logo: '4',
+    name: 'Workspace 4',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 2
+  },
+  {
+    id: 5,
+    logo: '5',
+    name: 'Workspace 5',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 6
+  },
+  {
+    id: 6,
+    logo: '6',
+    name: 'Workspace 6',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 6
+  },
+  {
+    id: 7,
+    logo: 'cp',
+    name: 'Workspace 6',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 6
+  },
+  {
+    id: 8,
+    logo: 'BG',
+    name: 'Workspace 6',
+    description:
+      'Innovators in digital solutions, blending creativity with expertise to elevate ideas and empower innovation.',
+    projectCount: 6
   }
 ];
