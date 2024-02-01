@@ -17,6 +17,25 @@ const SidebarAdmin = () => {
   const pathname = usePathname();
   const router = useRouter();
 
+  const ClearLocalAndExit = () => {
+    const createdBy = localStorage?.getItem('createdBy');
+    const workspaceID = localStorage?.getItem('workspaceID');
+
+    if (createdBy !== undefined) {
+      localStorage.removeItem('createdBy');
+    } else {
+      console.error('createdBy is undefined');
+    }
+
+    if (workspaceID !== undefined) {
+      localStorage.removeItem('workspaceID');
+    } else {
+      console.error('workspaceID is undefined');
+    }
+
+    router.push('/workspace');
+  };
+
   useEffect(() => {
     const currentPath = pathname?.replace(/^\/([^\/]+).*$/, '$1');
 
@@ -104,8 +123,8 @@ const SidebarAdmin = () => {
         </Link>
 
         {/* LogOut */}
-        <Link
-          href="/workspace"
+        <button
+          onClick={ClearLocalAndExit}
           role="button"
           tabIndex={0}
           aria-label="logout"
@@ -123,7 +142,7 @@ const SidebarAdmin = () => {
           <span className=" max-[1139px]:hidden group-hover:block">
             Exit current workspace
           </span>
-        </Link>
+        </button>
 
         {/* User Profile */}
 

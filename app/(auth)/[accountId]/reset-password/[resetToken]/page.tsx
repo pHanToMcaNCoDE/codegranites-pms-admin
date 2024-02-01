@@ -1,17 +1,21 @@
 'use client';
 
-import { Input } from '@/components/ui/Input';
+import { Input } from '@ui/Input';
 import Button from '@ui/Button';
 import PasswordPopover from '@ui/passwordPopober';
 import { Eye, EyeSlash } from 'iconsax-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { Header_for_many } from '../../../../components/auth/Header';
-import { useRouter } from 'next-nprogress-bar';
-import { PasswordVerificationSucessModal } from '../../../../components/auth/PasswordResetSuccessModal';
+import { toast } from 'react-toastify';
+import { usePathname } from 'next/navigation';
+import { changePassword } from '@/app/api/authApi';
+import { Header_for_many } from '@/components/auth/Header';
+import { PasswordVerificationSucessModal } from '@/components/auth/PasswordResetSuccessModal';
 
 const ResetPassword = () => {
+  const [isLoading, setIsloading] = useState<boolean>(false);
+  const pathName = usePathname();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [defaultInpTypeNew, setDefaultInpTypeNew] = useState<
@@ -19,14 +23,18 @@ const ResetPassword = () => {
   >('password');
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false); // New state for the modal
 
-  const router = useRouter();
-
-  const handleLoggedIn = (e: React.FormEvent) => {
+  const handleLoggedIn = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setIsVerificationModalOpen(true);
-
-    alert(password);
+    if (password === confirmPassword) {
+      setIsloading(true);
+      const res = await changePassword({ url: pathName, password });
+      setIsloading(false);
+      if (res?.status === 200) {
+        setIsVerificationModalOpen(true);
+      }
+    } else {
+      toast.error('Password does not match');
+    }
   };
 
   const closeModal = () => {
@@ -123,15 +131,20 @@ const ResetPassword = () => {
                     />
                   </PasswordPopover>
 
-                  <Button className="w-full rounded-md my-3" type="submit">
-                    Reset Password
+                  <Button
+                    isLoading={isLoading}
+                    className="w-full rounded-md my-3"
+                    type="submit"
+                    spinnerColor="#fff"
+                  >
+                    Change Password
                   </Button>
                 </form>
               </div>
 
               <span className=" text-white mb-8 mt-5 text-sm  relative block text-center md:text-black z-10">
                 What is
-                <Link href="/sign-up" className="ml-1 underline">
+                <Link href="/auth/sign-up" className="ml-1 underline">
                   CodeGranite
                 </Link>
               </span>
